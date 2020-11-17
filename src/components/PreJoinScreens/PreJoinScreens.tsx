@@ -32,6 +32,21 @@ export default function PreJoinScreens() {
         setStep(Steps.deviceSelectionStep);
       }
     }
+
+    // const fetchDisplayCall = async (callId: string, userAccessToken: string) => {
+    //   if (callId) {
+    //     const callInfo = await getJoinInfo(userAccessToken, callId);
+    //     setRoomName(callInfo.name);
+    //     if (callId) {
+    //       setStep(Steps.deviceSelectionStep);
+    //     }
+    //   }
+    // };
+    // //@ts-ignore
+    // const callId = user?.callId;
+    // //@ts-ignore
+    // const userAccessToken = user?.passcode;
+    // fetchDisplayCall(callId, userAccessToken);
   }, [user, URLRoomName]);
 
   useEffect(() => {
@@ -44,10 +59,13 @@ export default function PreJoinScreens() {
     }
   }, [getAudioAndVideoTracks, step]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>, caller: boolean) => {
     event.preventDefault();
-    // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
+    if (caller) {
+      setRoomName('');
+    }
     if (!window.location.origin.includes('twil.io')) {
+      // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
       window.history.replaceState(null, '', window.encodeURI(`/room/${roomName}${window.location.search || ''}`));
     }
     setStep(Steps.deviceSelectionStep);

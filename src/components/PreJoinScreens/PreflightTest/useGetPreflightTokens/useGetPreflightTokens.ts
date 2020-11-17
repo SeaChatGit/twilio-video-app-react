@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { useAppState } from '../../../../state';
 import { useState, useEffect } from 'react';
+import { getPasscode } from '../../../../state/usePasscodeAuth/usePasscodeAuth';
 
 export default function useGetPreflightTokens() {
   const { getToken } = useAppState();
@@ -10,16 +11,18 @@ export default function useGetPreflightTokens() {
 
   useEffect(() => {
     if (!isFetching && !tokens) {
-      const roomName = 'preflight-network-test-' + nanoid();
-
       setIsFetching(true);
 
-      const publisherIdentity = 'participant-' + nanoid();
-      const subscriberIdentity = 'participant-' + nanoid();
-
-      Promise.all([getToken(publisherIdentity, roomName), getToken(subscriberIdentity, roomName)])
-        .then(tokens => {
-          setTokens(tokens);
+      const headers = new window.Headers();
+      headers.append('Authorization', getPasscode()!);
+      const endpoint = `http://localhost:5000/api/calls/diagnosticTokens`;
+      fetch(`${endpoint}`, { headers })
+        .then(async res => {
+          const result = await res.json();
+          if (!result.publisherIdentityToken || result.publisherIdentityToken === '') {
+            throw new Error('publisherIdentityToken is not valid: ' + result.token);
+          }
+          setTokens([result.publisherIdentityToken, result.subscriberIdentityToken]);
           setIsFetching(false);
         })
         .catch(error => setTokenError(error));

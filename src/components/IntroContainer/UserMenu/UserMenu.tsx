@@ -48,6 +48,16 @@ const UserMenu: React.FC = () => {
     );
   }
 
+  if (process.env.REACT_APP_SET_AUTH === 'token') {
+    return (
+      <div className={classes.userContainer}>
+        <Link onClick={handleSignOut} className={classes.logoutLink}>
+          Logout
+        </Link>
+      </div>
+    );
+  }
+
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
     return (
       <div className={classes.userContainer}>

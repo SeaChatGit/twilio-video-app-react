@@ -141,6 +141,40 @@ export default function LoginPage() {
           </form>
         </>
       )}
+      {process.env.REACT_APP_SET_AUTH === 'token' && (
+        <>
+          <Typography variant="h5" className={classes.gutterBottom}>
+            Enter passcode to join a room
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <Grid container justify="space-between">
+              <div className={classes.passcodeContainer}>
+                <InputLabel shrink htmlFor="input-passcode">
+                  AuthorizationUserToken
+                </InputLabel>
+                <TextField
+                  id="input-passcode"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPasscode(e.target.value)}
+                  type="text"
+                  variant="outlined"
+                  size="small"
+                />
+              </div>
+            </Grid>
+            <Grid container justify="flex-end">
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={!passcode}
+                className={classes.submitButton}
+              >
+                Submit
+              </Button>
+            </Grid>
+          </form>
+        </>
+      )}
     </IntroContainer>
   );
 }
