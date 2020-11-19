@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { RoomType } from '../../types';
 
+export const API_URL = process.env.REACT_APP_API_URL;
+
 export function getPasscode() {
   const match = window.location.search.match(/passcode=(.*)&?/);
   const passcode = match ? match[1] : window.sessionStorage.getItem('passcode');
@@ -37,7 +39,7 @@ interface DisplayCall {
 export function getCall(userAccessToken: string, callId: string): Promise<DisplayCall> {
   const headers = new window.Headers();
   headers.append('Authorization', userAccessToken);
-  const endpoint = `http://localhost:5000/api/calls/${callId}`;
+  const endpoint = `${API_URL}/calls/${callId}`;
   const params = new window.URLSearchParams({ callIdString: callId });
   return fetch(`${endpoint}?${params}`, { headers }).then(async res => {
     const result = await res.json();
@@ -51,7 +53,7 @@ export function getCall(userAccessToken: string, callId: string): Promise<Displa
 export function getTokenByCallId(userAccessToken: string, callId: string) {
   const headers = new window.Headers();
   headers.append('Authorization', userAccessToken);
-  const endpoint = `http://localhost:5000/api/calls/${callId}/token`;
+  const endpoint = API_URL + `/calls/${callId}/token`;
   return fetch(`${endpoint}`, { headers }).then(async res => {
     if (res.status === 409) {
       return { isValid: false, error: `The specified call ${callId} is no longer active.` };
@@ -62,14 +64,14 @@ export function getTokenByCallId(userAccessToken: string, callId: string) {
     if (!result.token || result.token === '') {
       return { isValid: false, token: 'Call Token is not valid: ' + result.token };
     }
-    return { isValid: true, token: result.token };
+    return { isValid: true, token: result.token, callId };
   });
 }
 
 export function cancelCall(callId: string) {
   const headers = new window.Headers();
   headers.append('Authorization', getPasscode()!);
-  const endpoint = `http://localhost:5000/api/calls/${callId}`;
+  const endpoint = `${API_URL}/calls/${callId}`;
   return fetch(`${endpoint}`, { headers, method: 'DELETE' }).then(async res => {
     if (res.status === 409) {
       return { isValid: false, error: `A call ${callId} is currently completed for this chat.` };

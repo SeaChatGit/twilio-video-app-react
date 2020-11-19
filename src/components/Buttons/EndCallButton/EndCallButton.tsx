@@ -27,7 +27,6 @@ export default function EndCallButton(props: { className?: string }) {
 
   const handleDisconnect = () => {
     room.disconnect();
-    alert('Disconnect');
     cancelCall(callId).catch(error => setError(error));
   };
 

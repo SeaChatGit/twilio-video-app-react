@@ -58,15 +58,17 @@ interface DeviceSelectionScreenProps {
 
 export default function DeviceSelectionScreen({ name, roomName, setStep }: DeviceSelectionScreenProps) {
   const classes = useStyles();
-  const { getToken, isFetching, setError, setCallId } = useAppState();
+  const { getToken, isFetching, setError, setCallId, callId } = useAppState();
   const { connect, isAcquiringLocalTracks, isConnecting } = useVideoContext();
   const disableButtons = isFetching || isAcquiringLocalTracks || isConnecting;
 
   const handleJoin = () => {
     getToken(name, roomName)
-      .then(token => connect(token))
+      .then(res => {
+        setCallId(res.callId!);
+        connect(res.token);
+      })
       .catch(error => setError(error));
-    setCallId(roomName);
   };
 
   return (

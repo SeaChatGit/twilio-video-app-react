@@ -1,7 +1,6 @@
-import { FormatListBulletedTwoTone } from '@material-ui/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { getTokenByCallId } from '../../components/PreJoinScreens/calls';
+import { API_URL, getTokenByCallId } from '../../components/PreJoinScreens/calls';
 import { RoomType } from '../../types';
 
 export function getPasscode() {
@@ -13,7 +12,7 @@ export function getPasscode() {
 export function fetchToken(
   userAccessToken: string,
   callId?: string
-): Promise<{ isValid: boolean; token?: string; error?: string }> {
+): Promise<{ isValid: boolean; token?: string; error?: string; callId?: string }> {
   if (!callId) {
     // TODO: Make configurable
     const chatId = 'C.D1.KDTP8B7ZBR';
@@ -24,7 +23,7 @@ export function fetchToken(
     headers.append('Authorization', userAccessToken);
     headers.append('content-type', 'application/json');
 
-    const endpoint = `http://localhost:5000/api/calls`;
+    const endpoint = `${API_URL}/calls`;
     return fetch(`${endpoint}`, {
       headers,
       method: 'POST',
@@ -40,7 +39,7 @@ export function fetchToken(
       }
       const { callId, roomId } = result.displayCall;
       console.log(`CALL_INFO for ${callId} call id and room id ${roomId}`, result.displayCall);
-      return { isValid: true, token: result.token };
+      return { isValid: true, token: result.token, callId };
     });
   }
   return getTokenByCallId(userAccessToken, callId);
@@ -76,12 +75,14 @@ export default function usePasscodeAuth() {
   const getToken = useCallback(
     (name: string, room: string) => {
       setRoomType('group');
-      return fetchToken(user!.passcode, room).then((res: { isValid: boolean; token?: string; error?: string }) => {
-        if (res.isValid) {
-          return res.token!;
+      return fetchToken(user!.passcode, room).then(
+        (res: { isValid: boolean; token?: string; error?: string; callId?: string }) => {
+          if (res.isValid) {
+            return { token: res.token!, callId: res.callId };
+          }
+          throw new Error(getErrorMessage(res.error!));
         }
-        throw new Error(getErrorMessage(res.error!));
-      });
+      );
     },
     [user]
   );

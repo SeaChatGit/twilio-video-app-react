@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { useAppState } from '../../../../state';
 import { useState, useEffect } from 'react';
 import { getPasscode } from '../../../../state/usePasscodeAuth/usePasscodeAuth';
+import { API_URL } from '../../calls';
 
 export default function useGetPreflightTokens() {
   const { getToken } = useAppState();
@@ -15,7 +16,8 @@ export default function useGetPreflightTokens() {
 
       const headers = new window.Headers();
       headers.append('Authorization', getPasscode()!);
-      const endpoint = `http://localhost:5000/api/calls/diagnosticTokens`;
+      const endpoint = `${API_URL}/calls/diagnosticTokens`;
+      debugger;
       fetch(`${endpoint}`, { headers })
         .then(async res => {
           const result = await res.json();
