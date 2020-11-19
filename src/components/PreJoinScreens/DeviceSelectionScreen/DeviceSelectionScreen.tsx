@@ -58,18 +58,24 @@ interface DeviceSelectionScreenProps {
 
 export default function DeviceSelectionScreen({ name, roomName, setStep }: DeviceSelectionScreenProps) {
   const classes = useStyles();
-  const { getToken, isFetching } = useAppState();
+  const { getToken, isFetching, setError, setCallId, callId } = useAppState();
   const { connect, isAcquiringLocalTracks, isConnecting } = useVideoContext();
   const disableButtons = isFetching || isAcquiringLocalTracks || isConnecting;
 
   const handleJoin = () => {
-    getToken(name, roomName).then(token => connect(token));
+    getToken(name, roomName)
+      .then(res => {
+        setCallId(res.callId!);
+        connect(res.token);
+      })
+      .catch(error => setError(error));
   };
 
   return (
     <>
       <Typography variant="h5" className={classes.gutterBottom}>
-        Join {roomName}
+        {roomName && `Join ${roomName}`}
+        {roomName && `Start call`}
       </Typography>
 
       <Grid container justify="center">
@@ -104,7 +110,7 @@ export default function DeviceSelectionScreen({ name, roomName, setStep }: Devic
                 onClick={handleJoin}
                 disabled={disableButtons}
               >
-                Join Now
+                {roomName ? 'Join' : 'Start'}
               </Button>
             </div>
           </Grid>

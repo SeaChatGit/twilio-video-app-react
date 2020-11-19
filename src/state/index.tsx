@@ -4,14 +4,17 @@ import { TwilioError } from 'twilio-video';
 import { settingsReducer, initialSettings, Settings, SettingsAction } from './settings/settingsReducer';
 import useActiveSinkId from './useActiveSinkId/useActiveSinkId';
 import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
+import useTokeAuth from './useTokenAuth/useTokenAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
 
 export interface StateContextType {
+  callId: string;
+  setCallId(callId: string): void;
   error: TwilioError | null;
   setError(error: TwilioError | null): void;
-  getToken(name: string, room: string, passcode?: string): Promise<string>;
-  user?: User | null | { displayName: undefined; photoURL: undefined; passcode?: string };
+  getToken(name: string, room: string, passcode?: string): Promise<{ token: string; callId?: string }>;
+  user?: User | null | { displayName: undefined; photoURL: undefined; passcode?: string; callId?: string };
   signIn?(passcode?: string): Promise<void>;
   signOut?(): Promise<void>;
   isAuthReady?: boolean;
@@ -36,11 +39,14 @@ export const StateContext = createContext<StateContextType>(null!);
 */
 export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   const [error, setError] = useState<TwilioError | null>(null);
+  const [callId, setCallId] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [activeSinkId, setActiveSinkId] = useActiveSinkId();
   const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
 
   let contextValue = {
+    callId,
+    setCallId,
     error,
     setError,
     isFetching,
@@ -51,26 +57,30 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
-    contextValue = {
-      ...contextValue,
-      ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
-    };
+    // contextValue = {
+    //   ...contextValue,
+    //   ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
+    // };
   } else if (process.env.REACT_APP_SET_AUTH === 'passcode') {
+    // contextValue = {
+    //   ...contextValue,
+    //   ...usePasscodeAuth(), // eslint-disable-line react-hooks/rules-of-hooks
+    // };
+  } else if (process.env.REACT_APP_SET_AUTH === 'token') {
     contextValue = {
       ...contextValue,
-      ...usePasscodeAuth(), // eslint-disable-line react-hooks/rules-of-hooks
+      ...useTokeAuth(), // eslint-disable-line react-hooks/rules-of-hooks
     };
   } else {
-    contextValue = {
-      ...contextValue,
-      getToken: async (identity, roomName) => {
-        const headers = new window.Headers();
-        const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-        const params = new window.URLSearchParams({ identity, roomName });
-
-        return fetch(`${endpoint}?${params}`, { headers }).then(res => res.text());
-      },
-    };
+    // contextValue = {
+    //   ...contextValue,
+    //   getToken: async (identity, roomName) => {
+    //     const headers = new window.Headers();
+    //     const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
+    //     const params = new window.URLSearchParams({ identity, roomName });
+    //     return fetch(`${endpoint}?${params}`, { headers }).then(res => res.text());
+    //   },
+    // };
   }
 
   const getToken: StateContextType['getToken'] = (name, room) => {
